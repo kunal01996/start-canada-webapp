@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model QuizCategory {
+  id          Int               @id @default(autoincrement())
+  name        String            @db.VarChar(255)
+  description String?           @db.Text
+  image       String?           @db.VarChar(255)
+  isEnabled   Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  subcategories QuizSubcategory[]
+  levels      QuizLevel[]
+  quizzes     Quiz[]
+}
+
+model QuizSubcategory {
+  id          Int               @id @default(autoincrement())
+  categoryId  Int
+  category    QuizCategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String            @db.VarChar(255)
+  description String?           @db.Text
+  image       String?           @db.VarChar(255)
+  isEnabled   Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  levels      QuizLevel[]
+  quizzes     Quiz[]
+}
+
+model QuizLevel {
+  id            Int               @id @default(autoincrement())
+  categoryId    Int
+  subCategoryId Int
+  category      QuizCategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subcategory   QuizSubcategory   @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  name          String            @db.VarChar(255)
+  description   String?           @db.Text
+  image         String?           @db.VarChar(255)
+  isEnabled     Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  quizzes       Quiz[]
+}
+
+model Quiz {
+  id            Int               @id @default(autoincrement())
+  categoryId    Int
+  subCategoryId Int
+  levelId       Int
+  category      QuizCategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subcategory   QuizSubcategory   @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  level         QuizLevel         @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  name          String            @db.VarChar(255)
+  description   String?           @db.Text
+  duration      Int?
+  isEnabled     Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  attempts      UserTestAttempt[]
+}
+
+model QuestionType {
+  id          Int               @id @default(autoincrement())
+  name        String            @db.VarChar(255)
+  description String?           @db.Text
+  isEnabled   Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  questions   Question[]
+}
+
+model Question {
+  id               Int               @id @default(autoincrement())
+  questionDesc     String            @db.Text
+  questionTypeId   Int
+  questionType     QuestionType      @relation(fields: [questionTypeId], references: [id], onDelete: Cascade)
+  score            Int               @default(1)
+  isEnabled        Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  questionAnswers  QuestionToAnswer[]
+  userAnswers      UserQuestionAnswer[]
+}
+
+model Answer {
+  id               Int               @id @default(autoincrement())
+  description      String            @db.Text
+  isEnabled        Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  questionAnswers  QuestionToAnswer[]
+  userAnswers      UserQuestionAnswer[]
+}
+
+model QuestionToAnswer {
+  questionId Int
+  answerId   Int
+  isCorrect  Boolean            @default(false)
+  feedback   String?            @db.Text
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer   Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, answerId])
+}
+
+model UserType {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  firstName        String            @db.VarChar(255)
+  lastName         String            @db.VarChar(255)
+  email            String            @unique @db.VarChar(255)
+  image            String?           @db.VarChar(255)
+  dob              DateTime?
+  gender           String?           @db.VarChar(50)
+  countryOfOrigin  String?           @db.VarChar(100)
+  fieldOfStudy     String?           @db.VarChar(255)
+  password         String            @db.VarChar(255)
+  isEnabled        Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // New fields for UserType relation
+  typeId           Int
+  type             UserType          @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  testAttempts     UserTestAttempt[]
+}
+
+model UserTestAttempt {
+  id          Int               @id @default(autoincrement())
+  userId      Int
+  quizId      Int
+  attemptDate DateTime          @default(now())
+  score       Decimal?          @db.Decimal(5, 2)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz  Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers UserQuestionAnswer[]
+  feedbacks UserFeedback[]
+}
+
+model UserQuestionAnswer {
+  id               Int               @id @default(autoincrement())
+  userTestAttemptId Int
+  questionId      Int
+  answerId        Int
+  isCorrect       Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  userTestAttempt UserTestAttempt   @relation(fields: [userTestAttemptId], references: [id], onDelete: Cascade)
+  question        Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer          Answer            @relation(fields: [answerId], references: [id], onDelete: Cascade)
+}
+
+model UserFeedback {
+  id               Int              @id @default(autoincrement())
+  userTestAttemptId Int
+  feedback        String            @db.Text
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  userTestAttempt UserTestAttempt   @relation(fields: [userTestAttemptId], references: [id], onDelete: Cascade)
+}
