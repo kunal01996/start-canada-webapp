@@ -24,7 +24,7 @@ export default function Sidebar() {
             </DrawerHeader>
             <Divider />
             <List>
-                {Object.entries(DrawerItems).map(([key, value], index) => (
+                {Object.entries(DrawerItems).map(([key, value]) => (
                     <Link href={value.path} key={key}>
                         <ListItem disablePadding sx={{ display: 'block' }}>
                             <ListItemButton

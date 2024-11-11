@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 
 const UserList = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<Array<Database.User>>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -96,10 +96,10 @@ const UserList = () => {
                 <TableCell>{user.firstName + " " + user.lastName}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.gender}</TableCell>
-                <TableCell>{user.dob}</TableCell>
+                <TableCell>{new Date(user.dob || '')?.toLocaleDateString() || '-'}</TableCell>
                 <TableCell>{user.countryOfOrigin}</TableCell>
                 <TableCell>{user.isEnabled ? "Active" : "Inactive"}</TableCell>
-                <TableCell>{user.createdAt}</TableCell>
+                <TableCell>{new Date(user.createdAt)?.toLocaleDateString() || '-'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

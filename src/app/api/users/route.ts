@@ -1,6 +1,6 @@
 // src/app/api/users/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   }
 
   // Build the where clause based on the provided conditions
-  const whereClause: any = {
+  const whereClause: Prisma.UserWhereInput = {
     isEnabled: true, // Filter for enabled users
     typeId: 1,      // Filter for specific typeId
     OR: [
