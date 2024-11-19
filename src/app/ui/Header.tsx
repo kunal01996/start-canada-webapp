@@ -6,7 +6,7 @@ import AppBar from './AppBar';
 
 export default function Header() {
     return (
-        <AppBar position="fixed" open={true}>
+        <AppBar position="fixed" open={true} sx={{ zIndex: 1 }}>
             <Toolbar>
                 <Typography variant="h6" noWrap component="div">
                     Welcome

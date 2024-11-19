@@ -180,4 +180,16 @@ declare namespace Database {
       userTestAttempt: UserTestAttempt;
     };
   }
+
+  declare namespace Notification {
+    export type SuccessNotification = {
+      type: 'success',
+      message: string
+    }
+
+    export type ErrorNotification = {
+      type: 'error',
+      message: string
+    }
+  }
   
