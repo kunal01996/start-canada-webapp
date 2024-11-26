@@ -86,5 +86,8 @@ jobs:
         username: ${{ secrets.DEV_BASTION_HOST_USER }}
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
+          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
+          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
+          
           # Start or restart the app with PM2
           bash /var/www/app/startpm2.sh
