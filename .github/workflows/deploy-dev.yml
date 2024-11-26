@@ -70,6 +70,9 @@ jobs:
         username: ${{ secrets.DEV_BASTION_HOST_USER }}
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
+          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
+          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
+
           # Change to the app directory
           cd /var/www/app
           
