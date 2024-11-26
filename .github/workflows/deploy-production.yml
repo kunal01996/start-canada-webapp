@@ -1,0 +1,66 @@
+name: Deploy Startnew Webapp in production
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy from'
+        required: true
+        default: 'master'
+    # The workflow_dispatch event allows you to manually trigger the workflow.
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/master'  # Ensures that the deploy job only runs for the master branch.
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.18'
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.production.SSH_PRIVATE_KEY }}  # Store the private key of your EC2 instance in GitHub Secrets under 'production' environment
+
+    - name: Create SSH tunnel to RDS through Bastion Host
+      run: |
+        ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ secrets.production.DB_HOST }}:5432 ${{ secrets.production.BASTION_HOST_USER }}@${{ secrets.production.BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
+
+    - name: Install Prisma CLI
+      run: |
+        npm install @prisma/cli
+
+    - name: Run Prisma Migrations
+      run: |
+        DATABASE_URL=postgresql://${{ secrets.production.DB_USER }}:${{ secrets.production.DB_PASSWORD }}@localhost:${{ secrets.production.DB_PORT }}/${{ secrets.production.DB_NAME }} npx prisma migrate deploy
+
+    - name: Build Web app
+      run: |
+        npm run build
+
+    - name: Copy file via SSH password
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.production.BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.production.BASTION_HOST_USER }}
+        key: ${{ secrets.production.SSH_PRIVATE_KEY }}
+        source: ".next/*"
+        target: /var/www/app
+
+    - name: Create or restart PM2 service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.production.BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.production.BASTION_HOST_USER }}
+        key: ${{ secrets.production.SSH_PRIVATE_KEY }}
+        script: bash ./startpm2.sh

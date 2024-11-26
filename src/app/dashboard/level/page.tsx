@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button, Container, Grid, Typography } from '@mui/material';
+import { Container, Grid, Typography } from '@mui/material';
 import LevelList from '@/components/LevelList';
-import AddIcon from '@mui/icons-material/Add';
 import AddLevel from './Add';
 
 const Level = () => {

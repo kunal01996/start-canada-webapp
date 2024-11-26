@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button, Container, Grid, Typography } from '@mui/material';
+import { Container, Grid, Typography } from '@mui/material';
 import SubCategoryList from '@/components/SubCategoryList';
-import AddIcon from '@mui/icons-material/Add';
 import AddSubCategory from './Add';
 
 const SubCategory = () => {
