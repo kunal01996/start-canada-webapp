@@ -25,7 +25,7 @@ jobs:
     - name: Set up SSH agent
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}  # Store the private key of your EC2 instance in GitHub Secrets under 'develop' environment
+        ssh-private-key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}  # Store the private key of your EC2 instance in GitHub Secrets
 
     - name: Create SSH tunnel to RDS through Bastion Host
       run: |
@@ -35,9 +35,16 @@ jobs:
       run: |
         npm install prisma
 
+    - name: Percent-encode DB_PASSWORD
+      id: encode_password
+      run: |
+        # Using Node.js to encode the password
+        encoded_password=$(echo "${{ secrets.DEV_DB_PASSWORD }}" | node -e "console.log(encodeURIComponent(process.argv[1]));" "${{ secrets.DEV_DB_PASSWORD }}")
+        echo "encoded_password=$encoded_password" >> $GITHUB_ENV
+
     - name: Run Prisma Migrations
       run: |
-        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run migrate:deploy
+        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ env.encoded_password }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run migrate:deploy
 
     - name: Build Web app
       run: |
