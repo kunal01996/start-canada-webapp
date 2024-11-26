@@ -39,22 +39,41 @@ jobs:
       run: |
         DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run migrate:deploy
 
-    - name: Build Web app
-      run: |
-        npm run build
+    - name: Clean up app folder on the server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          # Remove all contents in the app folder on the server (be careful with this command)
+          rm -rf /var/www/app/*
 
-    - name: Copy startpm2.sh to .next folder
-      run: |
-        cp ./startpm2.sh .next/startpm2.sh  # Copy the startpm2.sh script to the .next folder
-
-    - name: Copy files via SSH password
+    - name: Copy project files to the server (excluding node_modules)
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
         username: ${{ secrets.DEV_BASTION_HOST_USER }}
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        source: ".next/*"
+        source: "."
         target: /var/www/app
+        exclude: "node_modules/*"  # Exclude node_modules from being copied
+
+    - name: Install dependencies and build on the server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          # Change to the app directory
+          cd /var/www/app
+          
+          # Install npm dependencies
+          npm install
+          
+          # Build the Next.js app
+          npm run build
 
     - name: Create or restart PM2 service
       uses: appleboy/ssh-action@v1.0.3
@@ -62,4 +81,6 @@ jobs:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
         username: ${{ secrets.DEV_BASTION_HOST_USER }}
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        script: bash /var/www/app/.next/startpm2.sh
+        script: |
+          # Start or restart the app with PM2
+          pm2 start /var/www/app/server.js --name "webapp" --watch || pm2 restart "webapp"
