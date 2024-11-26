@@ -1,11 +1,10 @@
-# checking if 'webapp' running in pm2
-
+# Check if 'webapp' is running in PM2
 PM2_EXIST=$(if pm2 list 2> /dev/null | grep -q webapp; then echo "Yes" ; else echo "No" ; fi)
 
-if [ $PM2_EXIST = Yes ] ; then
+if [ $PM2_EXIST = "Yes" ] ; then
     pm2 restart webapp
-    echo "Restart webapp."
+    echo "Restarted webapp."
 else
-    pm2 start npm --name webapp -- run start -- -p 3000
-    echo "Started webapp."
+    pm2 start node ./server.js --name webapp
+    echo "Started webapp with 'node ./server.js'."
 fi
