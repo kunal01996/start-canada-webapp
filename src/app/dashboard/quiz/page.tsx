@@ -1,3 +1,24 @@
-export default function Quiz() {
-    return <p>Quiz Page</p>;
-  }
+import React from 'react';
+import { Container, Grid, Typography } from '@mui/material';
+import QuizList from '@/components/QuizList';
+import AddQuiz from './Add';
+
+const Quiz = () => {
+  return (
+    <Container sx={{ marginTop: 10, marginBottom: 5 }}>
+      <Grid container justifyContent={'space-between'}>
+        <Grid item>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Quiz
+          </Typography>
+        </Grid>
+        <Grid item>
+          <AddQuiz />
+        </Grid>
+      </Grid>
+      <QuizList />
+    </Container>
+  );
+};
+
+export default Quiz;

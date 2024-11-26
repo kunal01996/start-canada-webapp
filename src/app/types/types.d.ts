@@ -109,8 +109,9 @@ declare namespace Database {
       question: Question;
       answer: Answer;
     };
-  
+    
     export type User = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       id: any;
       firstName: string;
       lastName: string;
@@ -178,5 +179,17 @@ declare namespace Database {
   
       userTestAttempt: UserTestAttempt;
     };
+  }
+
+  declare namespace Notification {
+    export type SuccessNotification = {
+      type: 'success',
+      message: string
+    }
+
+    export type ErrorNotification = {
+      type: 'error',
+      message: string
+    }
   }
   

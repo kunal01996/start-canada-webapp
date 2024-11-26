@@ -1,0 +1,61 @@
+name: Deploy Startnew Webapp in develop
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.18'
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.develop.SSH_PRIVATE_KEY }}  # Store the private key of your EC2 instance in GitHub Secrets under 'develop' environment
+
+    - name: Create SSH tunnel to RDS through Bastion Host
+      run: |
+        ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ secrets.develop.DB_HOST }}:5432 ${{ secrets.develop.BASTION_HOST_USER }}@${{ secrets.develop.BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
+
+    - name: Install Prisma CLI
+      run: |
+        npm install @prisma/cli
+
+    - name: Run Prisma Migrations
+      run: |
+        DATABASE_URL=postgresql://${{ secrets.develop.DB_USER }}:${{ secrets.develop.DB_PASSWORD }}@localhost:${{ secrets.develop.DB_PORT }}/${{ secrets.develop.DB_NAME }} npx prisma migrate deploy
+
+    - name: Build Web app
+      run: |
+        npm run build
+
+    - name: Copy file via SSH password
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.develop.BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.develop.BASTION_HOST_USER }}
+        key: ${{ secrets.develop.SSH_PRIVATE_KEY }}
+        source: ".next/*"
+        target: /var/www/app
+
+    - name: Create or restart PM2 service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.develop.BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.develop.BASTION_HOST_USER }}
+        key: ${{ secrets.develop.SSH_PRIVATE_KEY }}
+        script: bash ./startpm2.sh
