@@ -25,11 +25,11 @@ jobs:
     - name: Set up SSH agent
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.develop.SSH_PRIVATE_KEY }}  # Store the private key of your EC2 instance in GitHub Secrets under 'develop' environment
+        ssh-private-key: ${{ env.develop.SSH_PRIVATE_KEY }}  # Store the private key of your EC2 instance in GitHub env under 'develop' environment
 
     - name: Create SSH tunnel to RDS through Bastion Host
       run: |
-        ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ secrets.develop.DB_HOST }}:5432 ${{ secrets.develop.BASTION_HOST_USER }}@${{ secrets.develop.BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
+        ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ env.develop.DB_HOST }}:5432 ${{ env.develop.BASTION_HOST_USER }}@${{ env.develop.BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
 
     - name: Install Prisma CLI
       run: |
@@ -37,7 +37,7 @@ jobs:
 
     - name: Run Prisma Migrations
       run: |
-        DATABASE_URL=postgresql://${{ secrets.develop.DB_USER }}:${{ secrets.develop.DB_PASSWORD }}@localhost:${{ secrets.develop.DB_PORT }}/${{ secrets.develop.DB_NAME }} npx prisma migrate deploy
+        DATABASE_URL=postgresql://${{ env.develop.DB_USER }}:${{ env.develop.DB_PASSWORD }}@localhost:${{ env.develop.DB_PORT }}/${{ env.develop.DB_NAME }} npx prisma migrate deploy
 
     - name: Build Web app
       run: |
@@ -46,16 +46,16 @@ jobs:
     - name: Copy file via SSH password
       uses: appleboy/scp-action@v0.1.4
       with:
-        host: ${{ secrets.develop.BASTION_HOST_PUBLIC_IP }}
-        username: ${{ secrets.develop.BASTION_HOST_USER }}
-        key: ${{ secrets.develop.SSH_PRIVATE_KEY }}
+        host: ${{ env.develop.BASTION_HOST_PUBLIC_IP }}
+        username: ${{ env.develop.BASTION_HOST_USER }}
+        key: ${{ env.develop.SSH_PRIVATE_KEY }}
         source: ".next/*"
         target: /var/www/app
 
     - name: Create or restart PM2 service
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.develop.BASTION_HOST_PUBLIC_IP }}
-        username: ${{ secrets.develop.BASTION_HOST_USER }}
-        key: ${{ secrets.develop.SSH_PRIVATE_KEY }}
+        host: ${{ env.develop.BASTION_HOST_PUBLIC_IP }}
+        username: ${{ env.develop.BASTION_HOST_USER }}
+        key: ${{ env.develop.SSH_PRIVATE_KEY }}
         script: bash ./startpm2.sh
