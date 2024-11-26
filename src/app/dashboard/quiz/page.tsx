@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button, Container, Grid, Typography } from '@mui/material';
+import { Container, Grid, Typography } from '@mui/material';
 import QuizList from '@/components/QuizList';
-import AddIcon from '@mui/icons-material/Add';
 import AddQuiz from './Add';
 
 const Quiz = () => {
