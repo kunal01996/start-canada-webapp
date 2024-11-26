@@ -87,4 +87,4 @@ jobs:
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
           # Start or restart the app with PM2
-          bash ./.startpm2.sh
+          bash /var/www/app/startpm2.sh
