@@ -1,58 +1,27 @@
-import { NextResponse } from 'next/server';
-import nextConnect from 'next-connect';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-
-// Set up Multer to handle image uploads
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: './uploads/', // Directory where the images will be saved
-    filename: (req: any, file: any, cb: any) => {
-      const filename = `${Date.now()}-${file.originalname}`;
-      cb(null, filename);
-    },
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
-});
-
-// Ensure the uploads folder exists
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-// Set up next-connect to handle API routes
-const handler = nextConnect();
-
-// Use Multer middleware to handle the file upload
-handler.use(upload.single('image'));
+import { NextResponse } from 'next/server';
 
 // API route for user registration
-handler.post(async (req: any, res: any) => {
-  const { firstName, lastName, email, gender, countryOfOrigin, fieldOfStudy, password } = req.body;
+export async function POST(req: Request) {
+  const { firstName, lastName, email, gender, countryOfOrigin, fieldOfStudy, password } = await req.json();
 
   // Validate fields
   if (!firstName || !lastName || !email || !gender || !countryOfOrigin || !fieldOfStudy || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
+    return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
   }
 
   // Simple email validation
   const emailRegex = /\S+@\S+\.\S+/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: 'Invalid email address' });
+    return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
   }
 
   // Password validation
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,15}$/;
   if (!passwordRegex.test(password)) {
-    return res.status(400).json({ error: 'Password must be 8-15 characters long, and include letters, numbers, and special characters' });
+    return NextResponse.json({ error: 'Password must be 8-15 characters long, and include letters, numbers, and special characters' }, { status: 400 })
   }
-
-  // Get image path after file upload
-  const image = req.file ? req.file.path : null;
 
   // Hash the password before saving to the database
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -70,17 +39,15 @@ handler.post(async (req: any, res: any) => {
         gender,
         countryOfOrigin,
         fieldOfStudy,
-        image, // Store image file path in the database
+        image: null, // No image since file upload is removed
       },
     });
 
     // Respond with success message
-    return res.status(200).json({ message: 'Registration successful', user: newUser });
+    return NextResponse.json({ message: 'Registration successful', user: newUser }, { status: 200 })
   } catch (error) {
+    console.log(error)
     // Handle any errors from database insertion
-    console.error('Error saving user:', error);
-    return res.status(500).json({ error: 'Something went wrong. Please try again later.' });
+    return NextResponse.json({ error: 'Something went wrong. Please try again later.' }, { status: 500 })
   }
-});
-
-export const POST = handler; // Export the handler as the POST method
+}
