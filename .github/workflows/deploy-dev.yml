@@ -62,4 +62,4 @@ jobs:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
         username: ${{ secrets.DEV_BASTION_HOST_USER }}
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        script: bash /var/www/app/startpm2.sh
+        script: bash /var/www/app/.next/startpm2.sh
