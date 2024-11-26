@@ -43,7 +43,11 @@ jobs:
       run: |
         npm run build
 
-    - name: Copy file via SSH password
+    - name: Copy startpm2.sh to .next folder
+      run: |
+        cp ./startpm2.sh .next/startpm2.sh  # Copy the startpm2.sh script to the .next folder
+
+    - name: Copy files via SSH password
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
@@ -58,4 +62,4 @@ jobs:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
         username: ${{ secrets.DEV_BASTION_HOST_USER }}
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        script: cd /var/www/app/.next && bash ./startpm2.sh
+        script: bash /var/www/app/startpm2.sh
