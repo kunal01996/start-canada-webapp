@@ -1,7 +1,6 @@
 import React from 'react';
 import UserList from '../../../components/UserList';
-import { Button, Container, Grid, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Container, Grid, Typography } from '@mui/material';
 import AddUser from './Add';
 
 const UsersPage = () => {

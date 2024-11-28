@@ -1,0 +1,93 @@
+name: Deploy Startnew Webapp in develop
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.18'
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Build Web app
+      run: |
+        npm run build
+
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+
+    - name: Create SSH tunnel to RDS through Bastion Host
+      run: |
+        ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ secrets.DEV_DB_HOST }}:5432 ${{ secrets.DEV_BASTION_HOST_USER }}@${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
+
+    - name: Install Prisma CLI
+      run: |
+        npm install prisma
+
+    - name: Run Prisma Migrations
+      run: |
+        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run migrate:deploy
+
+    - name: Clean up app folder on the server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          # Remove all contents in the app folder on the server (be careful with this command)
+          rm -rf /var/www/app/*
+
+    - name: Copy all project files to the server (excluding node_modules)
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        source: "."
+        target: /var/www/app
+        exclude: "node_modules/*"  # Exclude node_modules from being copied
+
+    - name: Install dependencies on the server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
+          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
+
+          # Change to the app directory
+          cd /var/www/app
+          
+          # Install npm dependencies
+          npm install
+
+    - name: Create or restart PM2 service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
+          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
+          
+          # Start or restart the app with PM2
+          bash /var/www/app/startpm2.sh
