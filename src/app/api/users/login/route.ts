@@ -19,7 +19,9 @@ export async function POST(req: Request) {
     // If user is not found, return an error response
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        {
+          data: { message: 'Invalid email or password' }
+        },
         { status: 400 }
       );
     }
@@ -30,7 +32,10 @@ export async function POST(req: Request) {
     // If password is incorrect, return an error response
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        {
+          data: {
+          message: 'Invalid email or password' }
+        },
         { status: 400 }
       );
     }
@@ -43,8 +48,15 @@ export async function POST(req: Request) {
         email: user.email,
       },
       process.env.JWT_SECRET as string, // Ensure you have a JWT_SECRET in .env
-      { expiresIn: '1h' }
+      { expiresIn: '365d' }
     );
+
+    let res: any = {
+      message: 'Login successful',
+      typeId: user,
+      token: token, // You can remove this if you're not using JWT tokens
+    };
+    console.log("check", res);
 
     // Return user data and the JWT token
     return NextResponse.json({

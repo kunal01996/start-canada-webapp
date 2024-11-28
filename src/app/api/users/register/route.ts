@@ -1,65 +1,38 @@
-import { NextResponse } from 'next/server';
-import nextConnect from 'next-connect';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-// Set up Multer to handle image uploads
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: './uploads/', // Directory where the images will be saved
-    filename: (req: any, file: any, cb: any) => {
-      const filename = `${Date.now()}-${file.originalname}`;
-      cb(null, filename);
-    },
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
-});
+// Initialize Prisma Client
+const prisma = new PrismaClient();
 
-// Ensure the uploads folder exists
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-// Set up next-connect to handle API routes
-const handler = nextConnect();
-
-// Use Multer middleware to handle the file upload
-handler.use(upload.single('image'));
-
-// API route for user registration
-handler.post(async (req: any, res: any) => {
-  const { firstName, lastName, email, gender, countryOfOrigin, fieldOfStudy, password } = req.body;
-
-  // Validate fields
-  if (!firstName || !lastName || !email || !gender || !countryOfOrigin || !fieldOfStudy || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  // Simple email validation
-  const emailRegex = /\S+@\S+\.\S+/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: 'Invalid email address' });
-  }
-
-  // Password validation
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,15}$/;
-  if (!passwordRegex.test(password)) {
-    return res.status(400).json({ error: 'Password must be 8-15 characters long, and include letters, numbers, and special characters' });
-  }
-
-  // Get image path after file upload
-  const image = req.file ? req.file.path : null;
-
-  // Hash the password before saving to the database
-  const hashedPassword = await bcrypt.hash(password, 10);
-
+// POST method to handle user registration
+export async function POST(req: Request) {
   try {
-    const prisma = new PrismaClient();
-    // Save user data to the database using Prisma
+    // Parse the JSON data from the request body using the new Next.js 13 method
+    const parsedData = await req.json();
+
+    const { firstName, lastName, email, gender, countryOfOrigin, fieldOfStudy, password } = parsedData;
+
+    // Validate fields
+    if (!firstName || !lastName || !email || !gender || !countryOfOrigin || !fieldOfStudy || !password) {
+      return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
+    }
+
+    // Email validation
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      return new Response(JSON.stringify({ error: 'Invalid email address' }), { status: 400 });
+    }
+
+    // Password validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,15}$/;
+    if (!passwordRegex.test(password)) {
+      return new Response(JSON.stringify({ error: 'Password must be 8-15 characters long, with letters, numbers, and special characters' }), { status: 400 });
+    }
+
+    // Hash password before saving to the database
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save the user to the database (without image handling)
     const newUser = await prisma.user.create({
       data: {
         typeId: 1,
@@ -70,17 +43,22 @@ handler.post(async (req: any, res: any) => {
         gender,
         countryOfOrigin,
         fieldOfStudy,
-        image, // Store image file path in the database
       },
     });
 
-    // Respond with success message
-    return res.status(200).json({ message: 'Registration successful', user: newUser });
-  } catch (error) {
-    // Handle any errors from database insertion
-    console.error('Error saving user:', error);
-    return res.status(500).json({ error: 'Something went wrong. Please try again later.' });
-  }
-});
+    console.log("user", newUser);
 
-export const POST = handler; // Export the handler as the POST method
+    // Return success response
+    return new Response(
+      JSON.stringify({ message: 'Registration successful', user: newUser }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error(error);
+    // Return error response
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
