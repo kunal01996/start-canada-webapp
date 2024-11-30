@@ -43,6 +43,10 @@ jobs:
       run: |
         DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run migrate:deploy
 
+    - name: Run Database Seed
+      run: |
+        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run seed
+
     - name: Clean up app folder on the server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -90,22 +94,6 @@ jobs:
           
           # Install npm dependencies
           npm install
-
-    - name: Run DB Seed
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
-        username: ${{ secrets.DEV_BASTION_HOST_USER }}
-        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        script: |
-          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
-          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
-
-          # Change to the app directory
-          cd /var/www/app
-          
-          # Install npm dependencies
-          npm run seed
 
     - name: Create or restart PM2 service
       uses: appleboy/ssh-action@v1.0.3
