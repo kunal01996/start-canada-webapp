@@ -51,10 +51,14 @@ export async function POST(req: Request) {
       { expiresIn: '365d' }
     );
 
-    let res: any = {
+    const res = {
       message: 'Login successful',
       typeId: user,
       token: token, // You can remove this if you're not using JWT tokens
+    } as {
+      message: string;
+      typeId: Database.User;
+      token: string
     };
     console.log("check", res);
 
