@@ -1,51 +1,86 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
 async function main() {
-
-    const singleChoiceQuestion = await prisma.questionType.create({
-        data: {
-            name: 'SingleChoice',
-            description: 'Single answer questions',
-            isEnabled: true
-        }
+    // Check if 'SingleChoice' question type exists
+    const singleChoiceQuestion = await prisma.questionType.findFirst({
+        where: { name: 'SingleChoice' }
     })
 
-    const multipleChoiceQuestion = await prisma.questionType.create({
-        data: {
-            name: 'MultipleChoice',
-            description: 'Multiple answer questions',
-            isEnabled: true
-        }
+    if (!singleChoiceQuestion) {
+        // If it doesn't exist, create it
+        await prisma.questionType.create({
+            data: {
+                name: 'SingleChoice',
+                description: 'Single answer questions',
+                isEnabled: true
+            }
+        })
+        console.log('Created question type: SingleChoice')
+    } else {
+        console.log('Question type "SingleChoice" already exists.')
+    }
+
+    // Check if 'MultipleChoice' question type exists
+    const multipleChoiceQuestion = await prisma.questionType.findFirst({
+        where: { name: 'MultipleChoice' }
     })
 
-    console.log(`Created question type: ${singleChoiceQuestion.name}`);
-    console.log(`Created question type: ${multipleChoiceQuestion.name}`);
+    if (!multipleChoiceQuestion) {
+        // If it doesn't exist, create it
+        await prisma.questionType.create({
+            data: {
+                name: 'MultipleChoice',
+                description: 'Multiple answer questions',
+                isEnabled: true
+            }
+        })
+        console.log('Created question type: MultipleChoice')
+    } else {
+        console.log('Question type "MultipleChoice" already exists.')
+    }
 
-    // couple of UserTypes
-
-    const adminUserType = await prisma.userType.create({
-        data: {
-            name: 'Admin'
-        }
+    // Check if 'Admin' user type exists
+    const adminUserType = await prisma.userType.findFirst({
+        where: { name: 'Admin' }
     })
 
-    const appUserType = await prisma.userType.create({
-        data: {
-            name: 'AppUser'
-        }
+    if (!adminUserType) {
+        // If it doesn't exist, create it
+        await prisma.userType.create({
+            data: {
+                name: 'Admin'
+            }
+        })
+        console.log('Created user type: Admin')
+    } else {
+        console.log('User type "Admin" already exists.')
+    }
+
+    // Check if 'AppUser' user type exists
+    const appUserType = await prisma.userType.findFirst({
+        where: { name: 'AppUser' }
     })
 
-    console.log(`Created user type: ${adminUserType.name}`)
-    console.log(`Created user type: ${appUserType.name}`)
-
+    if (!appUserType) {
+        // If it doesn't exist, create it
+        await prisma.userType.create({
+            data: {
+                name: 'AppUser'
+            }
+        })
+        console.log('Created user type: AppUser')
+    } else {
+        console.log('User type "AppUser" already exists.')
+    }
 }
 
 main()
     .then(() => prisma.$disconnect())
     .catch(async (e) => {
         console.error(e); // Log any errors
-		await prisma.$disconnect(); // Ensure disconnection even if an error occurs
-		process.exit(1); 
+        await prisma.$disconnect(); // Ensure disconnection even if an error occurs
+        process.exit(1); 
     })
