@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
     // Build the where clause based on the provided conditions
     const whereClause: Prisma.QuizLevelWhereInput = {
-        isEnabled: true,
+        // isEnabled: true,
         AND: [
             {
                 name: {
@@ -63,41 +63,105 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 
     try {
-      const body = await request.json(); // Parse the request body
-      const { name, description, isEnabled, category, subCategory } = body;
-  
-      // Validate the input
-      if (!name) {
-        return NextResponse.json(
-          { error: 'Name and Image are required fields.' },
-          { status: 400 }
-        );
-      }
-  
-      // Create a new category using Prisma
-      const newCategory = await prisma.quizLevel.create({
-        data: {
-          name,
-          description,
-          isEnabled: isEnabled ?? true, // Default to true if not provided
-          categoryId: category,
-          subCategoryId: subCategory
-        },
-      });
-  
-      return NextResponse.json({
-        message: 'Level created successfully.',
-        category: newCategory,
-      });
+        const body = await request.json(); // Parse the request body
+        const { name, description, isEnabled, category, subCategory } = body;
+
+        // Validate the input
+        if (!name) {
+            return NextResponse.json(
+                { error: 'Name and Image are required fields.' },
+                { status: 400 }
+            );
+        }
+
+        // Create a new category using Prisma
+        const newCategory = await prisma.quizLevel.create({
+            data: {
+                name,
+                description,
+                isEnabled: isEnabled ?? true, // Default to true if not provided
+                categoryId: category,
+                subCategoryId: subCategory
+            },
+        });
+
+        return NextResponse.json({
+            message: 'Level created successfully.',
+            category: newCategory,
+        });
     } catch (error) {
-      console.error('Error creating level:', error);
-  
-      return NextResponse.json(
-        { error: 'An error occurred while creating the level.' },
-        { status: 500 }
-      );
+        console.error('Error creating level:', error);
+
+        return NextResponse.json(
+            { error: 'An error occurred while creating the level.' },
+            { status: 500 }
+        );
     } finally {
-      await prisma.$disconnect(); // Clean up Prisma connection
+        await prisma.$disconnect(); // Clean up Prisma connection
     }
-  
-  }
+
+}
+
+export async function PATCH(request: Request) {
+    try {
+        const body = await request.json(); // Parse the request body
+        const { id, name, description, isEnabled, category, subCategory } = body;
+
+        // Validate the input
+        if (!id) {
+            return NextResponse.json(
+                { error: 'ID is required for updating a level.' },
+                { status: 400 }
+            );
+        }
+
+        // Update the level using Prisma
+        const updatedLevel = await prisma.quizLevel.update({
+            where: { id },
+            data: {
+                ...(name !== undefined && { name }),
+                ...(description !== undefined && { description }),
+                ...(isEnabled !== undefined && { isEnabled }),
+                ...(category !== undefined && { categoryId: category }),
+                ...(subCategory !== undefined && { subCategoryId: subCategory }),
+            },
+        });
+
+        return NextResponse.json({
+            message: 'Level updated successfully.',
+            level: updatedLevel,
+        });
+    } catch (error: unknown) {
+        console.error('Error updating level:', error);
+
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            // Handle known Prisma errors
+            if (error.code === 'P2025') {
+                return NextResponse.json(
+                    { error: 'Level not found.' },
+                    { status: 404 }
+                );
+            }
+        } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+            // Handle unknown Prisma client errors
+            return NextResponse.json(
+                { error: 'An unknown database error occurred.' },
+                { status: 500 }
+            );
+        } else if (error instanceof Error) {
+            // Handle generic errors
+            return NextResponse.json(
+                { error: error.message },
+                { status: 500 }
+            );
+        }
+
+        // Fallback for unexpected error types
+        return NextResponse.json(
+            { error: 'An unexpected error occurred.' },
+            { status: 500 }
+        );
+    } finally {
+        await prisma.$disconnect(); // Clean up Prisma connection
+    }
+}

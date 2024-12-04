@@ -12,20 +12,24 @@ interface AddCategoryProps {
     setNotification: (notification: Notification.SuccessNotification | Notification.ErrorNotification | null) => void;
     notification: Notification.SuccessNotification | Notification.ErrorNotification | null;
     setReload: () => void
+    subCatToEdit?: Database.QuizSubcategory | undefined
+    setSubCatToEdit?: (value: Database.QuizSubcategory | null) => void
 }
 
 // Define the type for form data
 interface FormData {
     name: string;
     description: string;
-    category: string;
+    category: string | number;
     isEnabled: boolean;
 }
 
 export default function AddSubCategory({
     setNotification,
     notification,
-    setReload
+    setReload,
+    subCatToEdit,
+    setSubCatToEdit
 }: AddCategoryProps) {
 
     // State to control the drawer open/close
@@ -33,10 +37,10 @@ export default function AddSubCategory({
 
     // State to manage form data
     const [formData, setFormData] = useState<FormData>({
-        name: '',
-        description: '',
-        category: '',
-        isEnabled: true,
+        name: subCatToEdit?.name || '',
+        description: subCatToEdit?.description || '',
+        category: subCatToEdit?.categoryId || '',
+        isEnabled: !!subCatToEdit?.isEnabled,
     });
 
     const [categories, setCategories] = useState<Array<Database.QuizCategory>>([])
@@ -62,6 +66,18 @@ export default function AddSubCategory({
         fetchCategory();
     }, []);
 
+    useEffect(() => {
+
+        setFormData({
+            name: subCatToEdit?.name || '',
+            description: subCatToEdit?.description || '',
+            category: subCatToEdit?.categoryId || '',
+            isEnabled: !!subCatToEdit?.isEnabled,
+        })
+        setOpen(!!subCatToEdit)
+
+    }, [subCatToEdit])
+
     // Handle input change for form fields
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = event.target;
@@ -78,12 +94,15 @@ export default function AddSubCategory({
         try {
             // Make API call to the POST endpoint
             const response = await fetch('/api/dashboard/subCategory', {
-                method: 'POST',
+                method: subCatToEdit?.id ? 'PATCH' : 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    id: subCatToEdit ? subCatToEdit.id : undefined
+                }),
             });
 
             const data = await response.json();
@@ -99,6 +118,9 @@ export default function AddSubCategory({
                     message: `${data.subCategory.name} Sub-Category created successfully!`,
                 });
                 setOpen(false);
+                if (setSubCatToEdit) {
+                    setSubCatToEdit(null)
+                }
                 setReload()
             }
         } catch (error: unknown) {
@@ -139,6 +161,7 @@ export default function AddSubCategory({
                             fullWidth
                             required
                             name="category"
+                            value={formData.category}
                             onChange={handleChange}
                         >
                             {categories.map((category) => (
@@ -198,9 +221,13 @@ export default function AddSubCategory({
 
     return (
         <React.Fragment>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
-                Add Category
-            </Button>
+            {
+                !subCatToEdit ? (
+                    <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+                        Add Category
+                    </Button>
+                ) : null
+            }
             <Drawer
                 anchor="right"
                 open={open}
@@ -214,7 +241,7 @@ export default function AddSubCategory({
                 <AppBar position="static">
                     <Toolbar>
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                            Add Sub-Category
+                            {subCatToEdit ? 'Edit Sub-Category' : 'Add Sub-Category'}
                         </Typography>
                         <IconButton
                             size="large"

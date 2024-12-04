@@ -18,7 +18,7 @@ import {
 import Image from 'next/image';
 import ModeIcon from '@mui/icons-material/Mode';
 
-const SubCategoryList = ({ reloadKey }: { reloadKey: number }) => {
+const SubCategoryList = ({ reloadKey, setToEdit }: { reloadKey: number, setToEdit: (Catgeory: Database.QuizSubcategory) => void  }) => {
     const [subCategory, setSubCategory] = useState<Array<Database.QuizSubcategory>>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -101,7 +101,7 @@ const SubCategoryList = ({ reloadKey }: { reloadKey: number }) => {
                                     <TableCell>{subCategory.description}</TableCell>
                                     <TableCell>{subCategory.isEnabled ? (<Chip label="Enabled" color='success' />) : <Chip label='Disabled' color='error' />}</TableCell>
                                     <TableCell>{new Date(subCategory.createdAt || '')?.toLocaleDateString() || '-'}</TableCell>
-                                    <TableCell><IconButton aria-label="add an alarm">
+                                    <TableCell><IconButton aria-label="add an alarm" onClick={() => setToEdit(subCategory)}>
                                         <ModeIcon />
                                     </IconButton></TableCell>
                                 </TableRow>

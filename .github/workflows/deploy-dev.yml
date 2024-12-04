@@ -82,6 +82,7 @@ jobs:
           echo "DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@${{ secrets.DEV_DB_HOST }}:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }}" > /var/www/app/.env
           echo "AUTH_SECRET=${{ secrets.DEV_AUTH_SECRET }}" >> /var/www/app/.env
           echo "AUTH_TRUST_HOST=${{ secrets.DEV_AUTH_TRUST_HOST }}" >> /var/www/app/.env
+          echo "JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}" >> /var/www/app/.env
 
     - name: Install dependencies on the server
       uses: appleboy/ssh-action@v1.0.3

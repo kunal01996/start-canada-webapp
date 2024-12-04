@@ -11,6 +11,8 @@ const Level = () => {
   const [notificaton, setNotification] = useState<Notification.SuccessNotification | Notification.ErrorNotification | null>(null)
   const [reloadKey, setReloadKey] = useState(0);
 
+  const [levelToEdit, setLevelToEdit] = useState<Database.QuizLevel | null>()
+
   return (
     <Container sx={{ marginTop: 10, marginBottom: 5 }}>
       <Grid container justifyContent={'space-between'}>
@@ -20,13 +22,18 @@ const Level = () => {
           </Typography>
         </Grid>
         <Grid item>
-          <AddLevel setNotification={setNotification} notification={notificaton} setReload={() => setReloadKey(reloadKey + 1)} />
+          <AddLevel setNotification={setNotification} notification={notificaton} setReload={() => setReloadKey(reloadKey + 1)}ˀˀ />
         </Grid>
       </Grid>
       {
         notificaton ? <Box mb={3}><GenerateNotification notification={notificaton} /></Box> : null
       }
-      <LevelList reloadKey={reloadKey} />
+      {
+        levelToEdit ? (
+          <AddLevel setNotification={setNotification} notification={notificaton} setReload={() => setReloadKey(reloadKey + 1)} levelToEdit={levelToEdit} setLevelToEdit={(value: Database.QuizLevel | null) => setLevelToEdit(value)} />
+        ) : null
+      }
+      <LevelList reloadKey={reloadKey} setToEdit={(data: Database.QuizLevel) => setLevelToEdit(data)} />
     </Container>
   );
 };

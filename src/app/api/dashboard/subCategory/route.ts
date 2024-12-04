@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
   // Build the where clause based on the provided conditions
   const whereClause: Prisma.QuizSubcategoryWhereInput = {
-    isEnabled: true,
+    // isEnabled: true,s
     AND: [
       {
         name: {
@@ -94,4 +94,67 @@ export async function POST(request: Request) {
     await prisma.$disconnect(); // Clean up Prisma connection
   }
 
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json(); // Parse the request body
+    const { id, name, description, isEnabled, category } = body;
+
+    // Validate the input
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID is required for updating a sub-category.' },
+        { status: 400 }
+      );
+    }
+
+    // Update the sub-category using Prisma
+    const updatedSubCategory = await prisma.quizSubcategory.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(isEnabled !== undefined && { isEnabled }),
+        ...(category !== undefined && { categoryId: category }),
+      },
+    });
+
+    return NextResponse.json({
+      message: 'Sub-category updated successfully.',
+      subCategory: updatedSubCategory,
+    });
+  } catch (error: unknown) {
+    console.error('Error updating sub-category:', error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // Handle known Prisma errors
+      if (error.code === 'P2025') {
+        return NextResponse.json(
+          { error: 'Sub-category not found.' },
+          { status: 404 }
+        );
+      }
+    } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+      // Handle unknown Prisma client errors
+      return NextResponse.json(
+        { error: 'An unknown database error occurred.' },
+        { status: 500 }
+      );
+    } else if (error instanceof Error) {
+      // Handle generic errors
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Fallback for unexpected error types
+    return NextResponse.json(
+      { error: 'An unexpected error occurred.' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect(); // Clean up Prisma connection
+  }
 }

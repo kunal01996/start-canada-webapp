@@ -18,7 +18,7 @@ import {
 import Image from 'next/image';
 import ModeIcon from '@mui/icons-material/Mode';
 
-const CategoryList = ({ reloadKey }: { reloadKey: number }) => {
+const CategoryList = ({ reloadKey, setToEdit }: { reloadKey: number, setToEdit: (Catgeory: Database.QuizCategory) => void }) => {
     const [Category, setCategory] = useState<Array<Database.QuizCategory>>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -100,7 +100,7 @@ const CategoryList = ({ reloadKey }: { reloadKey: number }) => {
                                     <TableCell>{Category.isEnabled ? (<Chip label="Enabled" color='success' />) : <Chip label='Disabled' color='error' />}</TableCell>
                                     <TableCell>{new Date(Category.createdAt || '')?.toLocaleDateString() || '-'}</TableCell>
                                     <TableCell>
-                                        <IconButton aria-label="add an alarm">
+                                        <IconButton aria-label="add an alarm" onClick={() => setToEdit(Category)}>
                                             <ModeIcon />
                                         </IconButton>
                                     </TableCell>

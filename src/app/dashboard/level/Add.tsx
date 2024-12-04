@@ -12,21 +12,25 @@ interface AddCategoryProps {
     setNotification: (notification: Notification.SuccessNotification | Notification.ErrorNotification | null) => void;
     notification: Notification.SuccessNotification | Notification.ErrorNotification | null;
     setReload: () => void
+    levelToEdit?: Database.QuizLevel | undefined,
+    setLevelToEdit?: (param: Database.QuizLevel | null) => void
 }
 
 // Define the type for form data
 interface FormData {
     name: string;
     description: string;
-    category: string;
-    subCategory: string;
+    category: string | number;
+    subCategory: string | number;
     isEnabled: boolean;
 }
 
 export default function AddLevel({
     setNotification,
     notification,
-    setReload
+    setReload,
+    levelToEdit,
+    setLevelToEdit
 }: AddCategoryProps) {
 
     // State to control the drawer open/close
@@ -34,15 +38,28 @@ export default function AddLevel({
 
     // State to manage form data
     const [formData, setFormData] = useState<FormData>({
-        name: '',
-        description: '',
-        category: '',
-        subCategory: '',
-        isEnabled: true,
+        name: levelToEdit?.name || '',
+        description: levelToEdit?.description || '',
+        category: levelToEdit?.categoryId || '',
+        subCategory: levelToEdit?.subCategoryId || '',
+        isEnabled: levelToEdit?.isEnabled || true,
     });
 
     const [categories, setCategories] = useState<Array<Database.QuizCategory>>([])
     const [categoryStatus, setCategoryStatus] = useState('UNINIT')
+
+    useEffect(() => {
+
+        setFormData({
+            name: levelToEdit?.name || '',
+            description: levelToEdit?.description || '',
+            category: levelToEdit?.categoryId || '',
+            subCategory: levelToEdit?.subCategoryId || '',
+            isEnabled: !!levelToEdit?.isEnabled,
+        })
+        setOpen(!!levelToEdit)
+
+    }, [levelToEdit])
 
     const fetchCategory = async () => {
         try {
@@ -80,12 +97,15 @@ export default function AddLevel({
         try {
             // Make API call to the POST endpoint
             const response = await fetch('/api/dashboard/level', {
-                method: 'POST',
+                method: levelToEdit?.id ? 'PATCH' : 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    id: levelToEdit ? levelToEdit.id : undefined
+                }),
             });
 
             const data = await response.json();
@@ -98,9 +118,12 @@ export default function AddLevel({
             } else {
                 setNotification({
                     type: 'success',
-                    message: `${data.level.name} Sub-Category created successfully!`,
+                    message: levelToEdit ? `${levelToEdit.name} Level updated successfully!` : `${data.category.name} Level created successfully!`,
                 });
                 setOpen(false);
+                if (setLevelToEdit) {
+                    setLevelToEdit(null)
+                }
                 setReload()
             }
         } catch (error: unknown) {
@@ -219,9 +242,13 @@ export default function AddLevel({
 
     return (
         <React.Fragment>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
-                Add Level
-            </Button>
+            {
+                !levelToEdit ? (
+                    <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+                        Add Level
+                    </Button>
+                ) : null
+            }
             <Drawer
                 anchor="right"
                 open={open}
@@ -235,7 +262,7 @@ export default function AddLevel({
                 <AppBar position="static">
                     <Toolbar>
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                            Add level
+                        { levelToEdit ? 'Edit Level' : 'Add Level' }
                         </Typography>
                         <IconButton
                             size="large"
