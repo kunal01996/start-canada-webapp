@@ -26,10 +26,6 @@ jobs:
       run: |
         npx prisma generate
 
-    - name: Build Web app
-      run: |
-        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run build
-
     - name: Set up SSH agent
       uses: webfactory/ssh-agent@v0.5.3
       with:
@@ -38,6 +34,10 @@ jobs:
     - name: Create SSH tunnel to RDS through Bastion Host
       run: |
         ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ secrets.DEV_DB_HOST }}:5432 ${{ secrets.DEV_BASTION_HOST_USER }}@${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
+
+    - name: Build Web app
+      run: |
+        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run build
 
     - name: Install Prisma CLI
       run: |
