@@ -22,7 +22,7 @@ const Level = () => {
           </Typography>
         </Grid>
         <Grid item>
-          <AddLevel setNotification={setNotification} notification={notificaton} setReload={() => setReloadKey(reloadKey + 1)}ˀˀ />
+          <AddLevel setNotification={setNotification} notification={notificaton} setReload={() => setReloadKey(reloadKey + 1)} />
         </Grid>
       </Grid>
       {
