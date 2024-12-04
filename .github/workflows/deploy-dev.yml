@@ -29,8 +29,6 @@ jobs:
     - name: Build Web app
       run: |
         DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run build
-      env:
-        DATABASE_URL: postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@localhost:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }}
 
     - name: Set up SSH agent
       uses: webfactory/ssh-agent@v0.5.3
@@ -90,4 +88,27 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
-        username: ${{ secrets.DEV_BAS
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
+          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
+
+          # Change to the app directory
+          cd /var/www/app
+          
+          # Install npm dependencies
+          npm install
+
+    - name: Create or restart PM2 service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
+        username: ${{ secrets.DEV_BASTION_HOST_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          export NVM_DIR=/home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm
+          source /home/${{ secrets.DEV_BASTION_HOST_USER }}/.nvm/nvm.sh
+          
+          # Start or restart the app with PM2
+          bash /var/www/app/startpm2.sh
