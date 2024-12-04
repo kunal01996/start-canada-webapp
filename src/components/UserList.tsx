@@ -13,8 +13,10 @@ import {
   Paper,
   TextField,
   Typography,
-  Stack
+  Stack,
+  Chip
 } from '@mui/material';
+import Image from 'next/image';
 
 const UserList = () => {
   const [users, setUsers] = useState<Array<Database.User>>([]);
@@ -86,7 +88,7 @@ const UserList = () => {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>
                     {user.image ? (
-                      <img
+                      <Image
                         src={user.image}
                         alt={user.firstName}
                         style={{ width: 50, height: 50, borderRadius: '50%' }} // Example styles for the image
@@ -100,7 +102,7 @@ const UserList = () => {
                   <TableCell>{user.gender}</TableCell>
                   <TableCell>{new Date(user.dob || '')?.toLocaleDateString() || '-'}</TableCell>
                   <TableCell>{user.countryOfOrigin}</TableCell>
-                  <TableCell>{user.isEnabled ? "Active" : "Inactive"}</TableCell>
+                  <TableCell>{user.isEnabled ? (<Chip label="Enabled" color='success' />) : <Chip label='Disabled' color='error' />}</TableCell>
                   <TableCell>{new Date(user.createdAt)?.toLocaleDateString() || '-'}</TableCell>
                 </TableRow>
               )) : (

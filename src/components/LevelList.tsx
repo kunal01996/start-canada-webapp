@@ -11,10 +11,14 @@ import {
   Paper,
   TextField,
   Typography,
-  Stack
+  Stack,
+  IconButton,
+  Chip
 } from '@mui/material';
+import Image from 'next/image';
+import ModeIcon from '@mui/icons-material/Mode';
 
-const LevelList = () => {
+const LevelList = ({ reloadKey }: { reloadKey: number }) => {
   const [levels, setLevels] = useState<Array<Database.QuizLevel>>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -37,7 +41,7 @@ const LevelList = () => {
 
   useEffect(() => {
     fetchlevel(page, rowsPerPage, searchTerm);
-  }, [page, rowsPerPage, searchTerm]);
+  }, [page, rowsPerPage, searchTerm, reloadKey]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -75,6 +79,7 @@ const LevelList = () => {
                 <TableCell><Typography variant='h6'>Description</Typography></TableCell>
                 <TableCell><Typography variant='h6'>Is Enabled</Typography></TableCell>
                 <TableCell><Typography variant='h6'>Created At</Typography></TableCell>
+                <TableCell><Typography variant='h6'>Action</Typography></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -83,7 +88,7 @@ const LevelList = () => {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>
                     {level.image ? (
-                      <img
+                      <Image
                         src={level.image}
                         alt={level.name}
                         style={{ width: 50, height: 50, borderRadius: '50%' }} // Example styles for the image
@@ -96,12 +101,15 @@ const LevelList = () => {
                   <TableCell>{level.subcategory.name}</TableCell>
                   <TableCell>{level.name}</TableCell>
                   <TableCell>{level.description}</TableCell>
-                  <TableCell>{level.isEnabled}</TableCell>
+                  <TableCell>{level.isEnabled ? (<Chip label="Enabled" color='success' />) : <Chip label='Disabled' color='error' />}</TableCell>
                   <TableCell>{new Date(level.createdAt || '')?.toLocaleDateString() || '-'}</TableCell>
+                  <TableCell><IconButton aria-label="add an alarm">
+                                        <ModeIcon />
+                                    </IconButton></TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={9}>
                     <Typography align="center" color="text.secondary">
                       No data available
                     </Typography>

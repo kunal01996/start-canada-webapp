@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   // Build the where clause based on the provided conditions
   const whereClause: Prisma.QuizCategoryWhereInput = {
     isEnabled: true,
-    OR: [
+    AND: [
       {
         name: {
           contains: searchTerm, // Search by name

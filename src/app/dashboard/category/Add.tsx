@@ -12,6 +12,7 @@ import { GenerateNotification } from "@/components/Notification";
 interface AddCategoryProps {
   setNotification: (notification: Notification.SuccessNotification | Notification.ErrorNotification | null) => void;
   notification: Notification.SuccessNotification | Notification.ErrorNotification | null;
+  setReload: () => void
 }
 
 // Define the type for form data
@@ -24,6 +25,7 @@ interface FormData {
 export default function AddCategory({
   setNotification,
   notification,
+  setReload
 }: AddCategoryProps) {
   // State to control the drawer open/close
   const [open, setOpen] = useState<boolean>(false);
@@ -73,6 +75,7 @@ export default function AddCategory({
           message: `${data.category.name} Category created successfully!`,
         });
         setOpen(false);
+        setReload()
       }
     } catch (error: unknown) {
       // Handle error with specific type checks

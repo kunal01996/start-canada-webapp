@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     // Build the where clause based on the provided conditions
     const whereClause: Prisma.QuizLevelWhereInput = {
         isEnabled: true,
-        OR: [
+        AND: [
             {
                 name: {
                     contains: searchTerm, // Search by name
@@ -59,3 +59,45 @@ export async function GET(request: Request) {
         currentPage: page,
     });
 }
+
+export async function POST(request: Request) {
+
+    try {
+      const body = await request.json(); // Parse the request body
+      const { name, description, isEnabled, category, subCategory } = body;
+  
+      // Validate the input
+      if (!name) {
+        return NextResponse.json(
+          { error: 'Name and Image are required fields.' },
+          { status: 400 }
+        );
+      }
+  
+      // Create a new category using Prisma
+      const newCategory = await prisma.quizLevel.create({
+        data: {
+          name,
+          description,
+          isEnabled: isEnabled ?? true, // Default to true if not provided
+          categoryId: category,
+          subCategoryId: subCategory
+        },
+      });
+  
+      return NextResponse.json({
+        message: 'Level created successfully.',
+        category: newCategory,
+      });
+    } catch (error) {
+      console.error('Error creating level:', error);
+  
+      return NextResponse.json(
+        { error: 'An error occurred while creating the level.' },
+        { status: 500 }
+      );
+    } finally {
+      await prisma.$disconnect(); // Clean up Prisma connection
+    }
+  
+  }

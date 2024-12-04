@@ -9,6 +9,7 @@ import { GenerateNotification } from '@/components/Notification';
 const Category = () => {
 
   const [notificaton, setNotification] = useState<Notification.SuccessNotification | Notification.ErrorNotification | null>(null)
+  const [reloadKey, setReloadKey] = useState(0);
 
   return (
     <Container sx={{ marginTop: 10, marginBottom: 5 }}>
@@ -19,13 +20,13 @@ const Category = () => {
           </Typography>
         </Grid>
         <Grid item>
-          <AddCategory setNotification={setNotification} notification={notificaton} />
+          <AddCategory setNotification={setNotification} notification={notificaton} setReload={() => setReloadKey(reloadKey + 1)} />
         </Grid>
       </Grid>
       {
         notificaton ? <Box mb={3}><GenerateNotification notification={notificaton} /></Box> : null
       }
-      <CategoryList />
+      <CategoryList reloadKey={reloadKey} />
     </Container>
   );
 };

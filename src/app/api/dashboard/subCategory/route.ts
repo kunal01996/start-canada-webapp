@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   // Build the where clause based on the provided conditions
   const whereClause: Prisma.QuizSubcategoryWhereInput = {
     isEnabled: true,
-    OR: [
+    AND: [
       {
         name: {
           contains: searchTerm, // Search by name
@@ -52,4 +52,46 @@ export async function GET(request: Request) {
     totalPages: Math.ceil(totalSubCategories / limit),
     currentPage: page,
   });
+}
+
+
+export async function POST(request: Request) {
+
+  try {
+    const body = await request.json(); // Parse the request body
+    const { name, description, isEnabled, category } = body;
+
+    // Validate the input
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Name and Image are required fields.' },
+        { status: 400 }
+      );
+    }
+
+    // Create a new category using Prisma
+    const newCategory = await prisma.quizSubcategory.create({
+      data: {
+        name,
+        description,
+        isEnabled: isEnabled ?? true, // Default to true if not provided
+        categoryId: category
+      },
+    });
+
+    return NextResponse.json({
+      message: 'Sub-Category created successfully.',
+      subCategory: newCategory,
+    });
+  } catch (error) {
+    console.error('Error creating Sub-category:', error);
+
+    return NextResponse.json(
+      { error: 'An error occurred while creating the Sub-category.' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect(); // Clean up Prisma connection
+  }
+
 }
