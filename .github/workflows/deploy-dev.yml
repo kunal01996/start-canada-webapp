@@ -35,6 +35,10 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -fN -L 5432:${{ secrets.DEV_DB_HOST }}:5432 ${{ secrets.DEV_BASTION_HOST_USER }}@${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }} -i ~/.ssh/id_rsa
 
+    - name: Build Web app
+      run: |
+        DATABASE_URL=postgresql://${{ secrets.DEV_DB_USER }}:${{ secrets.DEV_DB_PASSWORD }}@${{ secrets.DEV_DB_HOST }}:${{ secrets.DEV_DB_PORT }}/${{ secrets.DEV_DB_NAME }} npm run build
+
     - name: Install Prisma CLI
       run: |
         npm install prisma
@@ -80,7 +84,7 @@ jobs:
           echo "AUTH_TRUST_HOST=${{ secrets.DEV_AUTH_TRUST_HOST }}" >> /var/www/app/.env
           echo "JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}" >> /var/www/app/.env
 
-    - name: Install dependencies & build on the server
+    - name: Install dependencies on the server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.DEV_BASTION_HOST_PUBLIC_IP }}
@@ -94,7 +98,7 @@ jobs:
           cd /var/www/app
           
           # Install npm dependencies
-          npm install && npm run build
+          npm install
 
     - name: Create or restart PM2 service
       uses: appleboy/ssh-action@v1.0.3
